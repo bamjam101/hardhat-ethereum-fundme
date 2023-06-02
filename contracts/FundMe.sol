@@ -16,8 +16,11 @@ contract FundMe {
     address[] public funders;
     mapping(address => uint256) public addressToAmountFunded;
 
-    constructor() {
+    AggregatorV3Interface public priceFeed;
+
+    constructor(address priceFeedAddress) {
         i_owner = msg.sender;
+        priceFeed = AggregatorV3Interface(priceFeedAddress);
     }
 
     function fund() public payable {
@@ -25,7 +28,7 @@ contract FundMe {
 
         // Boundary line for users with at least a threshold amount in there wallet.
         require(
-            msg.value.conversionRate() > MINIMUM_USD,
+            msg.value.conversionRate(priceFeed) > MINIMUM_USD,
             "Didn't send enough funds!"
         ); // 1e18 == 1 * 10 ** 18 == 100000000000000000
         // What is reverting? It undos any action before, and sends remaining gas back. It automatically takes place when require fails.
