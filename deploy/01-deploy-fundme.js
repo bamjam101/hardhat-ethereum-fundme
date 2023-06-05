@@ -1,26 +1,38 @@
 // imports
-const { networkConfig } = require("../helper-hardhat-config")
+const { networkConfig, developmentChains } = require("../helper-hardhat-config")
 const { network } = require("hardhat")
-// hardhat-deploy syntactical changes from regular async main function
+const { verify } = require("../utils/verify")
 
-// exporting the anyonymous function so that hardhat-deploy package can pick it up and run this specific deploy function
+// hardhat-deploy syntactical changes from regular async main function
+/* 
+module.exports = async ({ getNamedAccounts, deployments}) => {}
+*/
+// OR you can use in the following manner, the meaning stays the same
 module.exports = async (hre) => {
     const { getNamedAccounts, deployments } = hre // Hardhat runtime environment exposes information that is generated via Hardhat execution
-
+    const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
 
     // network configuration
     const ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"]
-    // Mock required to operate on local network such as Hardhat network
+    // Mock deployment required to operate on local network such as Hardhat network ~ defined in 00-deploy-mocks.js file
+
+    const args = [ethUsdPriceFeedAddress]
     // deployment
-    const fundMe = await deployer("FundMe", {
+    const fundMe = await deploy("FundMe", {
         from: deployer,
-        args: [],
+        args: args,
+        log: true,
+        waitConfirmation: network.config.blockConfirmation || 1,
     })
+
+    if (
+        !developmentChains.includes(network.name) &&
+        process.env.ETHERSCAN_API_KEY
+    ) {
+        await verify(fundMe.address, args)
+    }
 }
 
-// OR you can use in the following manner, the meaning stays the same
-/* 
-module.exports = async ({ getNamedAccounts, deployments}) => {}
-*/
+module.exports.tags = ["all", "fundme"]

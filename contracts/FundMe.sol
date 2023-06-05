@@ -1,28 +1,65 @@
 // SPDX-License-Identifier: MIT
 
+// 1. Pragma
 pragma solidity ^0.8.8;
+
+// 2. Imports
 import "./PriceConverter.sol";
 
-error NotOwner();
+// 3. Error codes
+error FundMe__NotOwner();
 
+// 4. Interface, Libraries, Contracts
+/**
+ * @title FundMe - A contract for crowd funding
+ * @author bamjamlol
+ * @notice This contract is to practise solidity datastructures and implement funding and withdrawal mechanism
+ * @dev This implements price feeds as our library
+ */
 contract FundMe {
+    // Type Declaration
     using PriceConverter for uint256;
 
-    // immutable and constant type variable declaration saves on gas consumption.
-    address public immutable i_owner;
+    // State Variables
+    address public immutable i_owner; // immutable and constant type variable declaration saves on gas consumption
 
     uint public constant MINIMUM_USD = 50 * 1e18; // or 50* 10 ** 18
 
     address[] public funders;
     mapping(address => uint256) public addressToAmountFunded;
 
+    // Parameterizing priceFeed as per network configurations, which means the priceFeed will be different for different blockchain networks
     AggregatorV3Interface public priceFeed;
 
+    // Modifiers
+    modifier onlyOwner() {
+        // require based revert when sender is not owner - consumes more gas as all the characters of the error message are stored individually
+        // require(msg.sender == i_owner, "Sender is not owner!");
+
+        if (msg.sender != i_owner) revert FundMe__NotOwner();
+        _;
+    }
+
+    // Functions order implemented
     constructor(address priceFeedAddress) {
         i_owner = msg.sender;
         priceFeed = AggregatorV3Interface(priceFeedAddress);
     }
 
+    // executes when someone sends a transaction with money without calling the fund function, action- redirects to fund function.
+    receive() external payable {
+        fund();
+    }
+
+    // executes when someone sends a transaction with money and specifies an unknown function, action- redirects to fund function.
+    fallback() external payable {
+        fund();
+    }
+
+    /**
+     * @notice This function accepts funds sent to this contract
+     * @dev This implements price feeds as our library
+     */
     function fund() public payable {
         // payable keyword - this represents that users can send ETH to this contract.
 
@@ -39,7 +76,10 @@ contract FundMe {
     }
 
     // Step 1 - how to send money to our FundMe smart contract through fund() function.
-
+    /**
+     * @notice This function collects funds from this contract
+     * @dev This implements mechanism to only allow owner withdrawal
+     */
     function withdraw() public onlyOwner {
         // Lopping the funders array and removing the funds from the map
         for (
@@ -69,22 +109,28 @@ contract FundMe {
         }("");
         require(callSuccess, "Call failed!");
     }
-
-    modifier onlyOwner() {
-        // require based revert when sender is not owner - consumes more gas as all the characters of the error message are stored individually
-        // require(msg.sender == i_owner, "Sender is not owner!");
-
-        if (msg.sender != i_owner) revert NotOwner();
-        _;
-    }
-
-    // executes when someone sends a transaction with money without calling the fund function, action- redirects to fund function.
-    receive() external payable {
-        fund();
-    }
-
-    // executes when someone sends a transaction with money and specifies an unknown function, action- redirects to fund function.
-    fallback() external payable {
-        fund();
-    }
 }
+
+/*
+Solidity Style Guide
+
+1. Pragma statements
+2. Imports
+3. Error codes
+4. Interface, Libraries, Contracts - Natspec format used for automated documentation 
+    Contract Guidelines -
+    1. Type Declaration
+    2. State Variables
+    3. Events
+    4. Modifiers
+    5. Functions
+        Function order 
+        1. Contructor
+        2. Recieve
+        3. Fallback
+        4. External
+        5. Public
+        6. Internal
+        7. Private
+        8. view/pure
+*/

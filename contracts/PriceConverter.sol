@@ -16,6 +16,7 @@ library PriceConverter {
         return uint256(price * 1e18); // 1**10 = 10000000000
     }
 
+    // responsible for converting the ETH value to currency (eg. USD) and vise-versa
     function conversionRate(
         uint256 ethAmount,
         AggregatorV3Interface priceFeed
