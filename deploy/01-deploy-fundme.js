@@ -16,13 +16,16 @@ module.exports = async (hre) => {
 
     // network configuration
     let ethUsdPriceFeedAddress
-    if (developmentChains.includes(network.name)) {
+    if (chainId == 31337) {
         const ethUsdAggregator = await deployments.get("MockV3Aggregator")
         ethUsdPriceFeedAddress = ethUsdAggregator.address
     } else {
         ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"]
     }
     // Mock deployment required to operate on local network such as Hardhat network ~ defined in 00-deploy-mocks.js file
+
+    log("-------------------------------------------")
+    log("Deploying FundMe and waiting for confirmations...")
 
     const args = [ethUsdPriceFeedAddress]
     // deployment
@@ -33,7 +36,7 @@ module.exports = async (hre) => {
         waitConfirmation: network.config.blockConfirmation || 1,
     })
 
-    log("-------------------------------------------")
+    log(`FundMe deployed at ${fundMe.address}`)
 
     if (
         !developmentChains.includes(network.name) &&
