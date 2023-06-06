@@ -30,6 +30,9 @@ module.exports = {
             chainId: 11155111,
             blockConfirmation: 6,
         },
+        hardhat: {
+            chainId: 31337,
+        },
     },
     // Etherscan configuration for verifying smart contracts
     etherscan: {

@@ -15,7 +15,13 @@ module.exports = async (hre) => {
     const chainId = network.config.chainId
 
     // network configuration
-    const ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"]
+    let ethUsdPriceFeedAddress
+    if (developmentChains.includes(network.name)) {
+        const ethUsdAggregator = await deployments.get("MockV3Aggregator")
+        ethUsdPriceFeedAddress = ethUsdAggregator.address
+    } else {
+        ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"]
+    }
     // Mock deployment required to operate on local network such as Hardhat network ~ defined in 00-deploy-mocks.js file
 
     const args = [ethUsdPriceFeedAddress]
@@ -26,6 +32,8 @@ module.exports = async (hre) => {
         log: true,
         waitConfirmation: network.config.blockConfirmation || 1,
     })
+
+    log("-------------------------------------------")
 
     if (
         !developmentChains.includes(network.name) &&
