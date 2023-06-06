@@ -26,6 +26,8 @@
         "ethers": "^5"
     },
     "scripts": {
+        "deploy:hardhat": "hardhat deploy --network hardhat",
+        "deploy:testnet": "hardhat deploy --network sepolia",
         "test": "hardhat test",
         "test:staging": "hardhat test --network sepolia",
         "format": "prettier --write .",

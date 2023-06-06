@@ -28,7 +28,7 @@ module.exports = {
             url: SEPOLIA_RPC_URL,
             accounts: [PRIVATE_KEY],
             chainId: 11155111,
-            blockConfirmation: 6,
+            blockConfirmations: 6,
         },
         hardhat: {
             chainId: 31337,

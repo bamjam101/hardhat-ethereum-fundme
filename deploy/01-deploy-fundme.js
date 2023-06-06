@@ -33,7 +33,7 @@ module.exports = async (hre) => {
         from: deployer,
         args: args,
         log: true,
-        waitConfirmation: network.config.blockConfirmation || 1,
+        waitConfirmations: network.config.blockConfirmations || 5,
     })
 
     log(`FundMe deployed at ${fundMe.address}`)

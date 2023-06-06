@@ -21,15 +21,15 @@ contract FundMe {
     using PriceConverter for uint256;
 
     // State Variables
-    address public immutable i_owner; // immutable and constant type variable declaration saves on gas consumption
+    address private immutable i_owner; // immutable and constant type variable declaration saves on gas consumption
 
     uint public constant MINIMUM_USD = 50 * 1e18; // or 50* 10 ** 18
 
-    address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+    address[] private s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
 
     // Parameterizing priceFeed as per network configurations, which means the priceFeed will be different for different blockchain networks
-    AggregatorV3Interface public priceFeed;
+    AggregatorV3Interface private s_priceFeed;
 
     // Modifiers
     modifier onlyOwner() {
@@ -41,9 +41,9 @@ contract FundMe {
     }
 
     // Functions order implemented
-    constructor(address priceFeedAddress) {
+    constructor(address s_priceFeedAddress) {
         i_owner = msg.sender;
-        priceFeed = AggregatorV3Interface(priceFeedAddress);
+        s_priceFeed = AggregatorV3Interface(s_priceFeedAddress);
     }
 
     // executes when someone sends a transaction with money without calling the fund function, action- redirects to fund function.
@@ -65,14 +65,14 @@ contract FundMe {
 
         // Boundary line for users with at least a threshold amount in there wallet.
         require(
-            msg.value.conversionRate(priceFeed) > MINIMUM_USD,
+            msg.value.conversionRate(s_priceFeed) > MINIMUM_USD,
             "Didn't send enough funds!"
         ); // 1e18 == 1 * 10 ** 18 == 100000000000000000
         // What is reverting? It undos any action before, and sends remaining gas back. It automatically takes place when require fails.
 
-        // Maintain list of funders -
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] = msg.value;
+        // Maintain list of s_funders -
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] = msg.value;
     }
 
     // Step 1 - how to send money to our FundMe smart contract through fund() function.
@@ -81,18 +81,18 @@ contract FundMe {
      * @dev This implements mechanism to only allow owner withdrawal
      */
     function withdraw() public onlyOwner {
-        // Lopping the funders array and removing the funds from the map
+        // Lopping the s_funders array and removing the funds from the map
         for (
             uint256 funderIndex = 0;
-            funderIndex < funders.length;
+            funderIndex < s_funders.length;
             funderIndex++
         ) {
-            address funder = funders[funderIndex];
-            addressToAmountFunded[funder] = 0;
+            address funder = s_funders[funderIndex];
+            s_addressToAmountFunded[funder] = 0;
         }
 
         // Reset the array
-        funders = new address[](0);
+        s_funders = new address[](0);
         // Withdraw the funds in three different way
         // Using payable address type
 
@@ -108,6 +108,47 @@ contract FundMe {
             value: address(this).balance
         }("");
         require(callSuccess, "Call failed!");
+    }
+
+    // View/pure functions for retrieving private state variables
+    /**
+     * @notice Gets the amount that an address has funded
+     * @param fundingAddress is funder's address
+     * @return uinit256
+     */
+    function getAddressToAmount(
+        address fundingAddress
+    ) public view returns (uint256) {
+        return s_addressToAmountFunded[fundingAddress];
+    }
+
+    /**
+     * @notice Provides the version used for price configuration - PriceFeed
+     * @return uint256
+     */
+    function getVersion() public view returns (uint256) {
+        return s_priceFeed.version();
+    }
+
+    /**
+     * @notice To retrieve different funders of our smart contract
+     * @param index of the funders list
+     * @return address of the funder found on the given index
+     */
+    function getFunders(uint256 index) public view returns (address) {
+        return s_funders[index];
+    }
+
+    /**
+     * @notice To retrieve address of owner of smart contract
+     * @return address of the owner of smart contract
+     */
+    function getOwner() public view returns (address) {
+        return i_owner;
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return s_priceFeed;
     }
 }
 
